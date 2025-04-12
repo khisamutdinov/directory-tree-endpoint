@@ -38,8 +38,17 @@ public class CommandFactory {
                 return new ListCommand(fileSystem, input);
 
             case "MOVE":
+                if (parts.length < 3) {
+                    return null;
+                }
+                return new MoveCommand(fileSystem, parts[1], parts[2], input);
+
             case "DELETE":
-                throw new UnsupportedOperationException("\"%s\" command is not supported yet".formatted(commandType));
+                if (parts.length < 2) {
+                    return null;
+                }
+                return new DeleteCommand(fileSystem, parts[1], input);
+
             default:
                 throw new UnknownCommandException(commandType);
         }

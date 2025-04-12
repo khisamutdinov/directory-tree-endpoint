@@ -2,26 +2,25 @@ package net.shamansoft.endpoint.directorytree.command;
 
 import lombok.RequiredArgsConstructor;
 import net.shamansoft.endpoint.directorytree.model.FileSystem;
-import java.util.List;
 
 /**
- * Command to list the directory structure.
+ * Command to delete a directory.
  */
 @RequiredArgsConstructor
-public class ListCommand implements Command {
+public class DeleteCommand implements Command {
     private final FileSystem fileSystem;
+    private final String path;
     private final String originalCommand;
 
     @Override
     public String execute() {
 
-        List<String> listing = fileSystem.listDirectories();
-
         StringBuilder result = new StringBuilder(originalCommand).append("\n");
-        for (String line : listing) {
-            result.append(line).append("\n");
+        try {
+            fileSystem.deleteDirectory(path);
+        } catch (IllegalArgumentException e) {
+            result.append("Cannot delete %s - %s\n".formatted(path, e.getMessage()));
         }
-
-        return result.toString();
+     return result.toString();
     }
 }

@@ -29,7 +29,7 @@ public class DirectoryTreeApplication {
                     Command command = commandFactory.createCommand(line);
                     String output = command.execute();
                     System.out.print(output);
-                } catch (UnknownCommandException | UnsupportedOperationException e) {
+                } catch (UnknownCommandException e) {
                     System.out.println(e.getMessage());
                 }
             }

@@ -1,5 +1,8 @@
 package net.shamansoft.endpoint.directorytree.model;
 
+import net.shamansoft.endpoint.directorytree.utils.DirectoryLister;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import static net.shamansoft.endpoint.directorytree.utils.StringUtils.isNullOrBlank;
@@ -9,6 +12,9 @@ import static net.shamansoft.endpoint.directorytree.utils.StringUtils.isNullOrBl
  * Provides methods for creating, moving, and deleting directories.
  */
 public class FileSystem {
+
+    private final Directory root = new Directory("");
+    private final DirectoryLister directoryLister = new DirectoryLister();
 
     /**
      * Creates a new directory at the specified path.
@@ -21,6 +27,22 @@ public class FileSystem {
         if (isNullOrBlank(path)) {
             return false;
         }
+
+        String[] parts = path.split("/");
+        Directory current = root;
+
+        for (String part : parts) {
+            Directory child = current.getChild(part);
+
+            if (child == null) {
+                // Create new directory if it doesn't exist
+                child = new Directory(part);
+                current.addChild(child);
+            }
+
+            current = child;
+        }
+
         return true;
     }
 
@@ -30,7 +52,13 @@ public class FileSystem {
      * @return a list of strings representing the directory structure
      */
     public List<String> listDirectories() {
-        List<String> result = List.of("Stub 1", "Stub 2", "Stub 3");
+        List<String> result = new ArrayList<>();
+        for (String dirName : root.getChildrenNames()) {
+            Directory dir = root.getChild(dirName);
+            result.add(dirName);
+            result.addAll(directoryLister.listDirectory(dir, 1));
+        }
         return result;
     }
+
 }

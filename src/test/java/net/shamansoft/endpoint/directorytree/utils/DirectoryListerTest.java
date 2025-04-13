@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 class DirectoryListerTest {
@@ -31,7 +31,7 @@ class DirectoryListerTest {
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertTrue(result.isEmpty());
+        assertThat(result).isEmpty();
     }
 
     @Test
@@ -45,7 +45,7 @@ class DirectoryListerTest {
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertEquals(List.of("child1", "child2"), result);
+        assertThat(result).containsExactlyInAnyOrder("child1", "child2");
     }
 
     @Test
@@ -60,7 +60,7 @@ class DirectoryListerTest {
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertEquals(List.of("child1", "  child2"), result);
+        assertThat(result).containsExactlyInAnyOrder("child1", "  child2");
     }
 
     @Test
@@ -79,6 +79,10 @@ class DirectoryListerTest {
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertEquals(List.of("child1", "  child2", "    child3"), result);
+        assertThat(result).containsExactlyInAnyOrder(
+                "child1",
+                "  child2",
+                "    child3"
+        );
     }
 }

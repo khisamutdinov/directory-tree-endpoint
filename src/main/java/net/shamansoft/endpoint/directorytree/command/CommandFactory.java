@@ -2,6 +2,7 @@ package net.shamansoft.endpoint.directorytree.command;
 
 import lombok.RequiredArgsConstructor;
 import net.shamansoft.endpoint.directorytree.model.FileSystem;
+import net.shamansoft.endpoint.directorytree.utils.PathValidator;
 
 import static net.shamansoft.endpoint.directorytree.utils.StringUtils.isNullOrBlank;
 
@@ -11,15 +12,16 @@ import static net.shamansoft.endpoint.directorytree.utils.StringUtils.isNullOrBl
 @RequiredArgsConstructor
 public class CommandFactory {
     private final FileSystem fileSystem;
+    private final PathValidator pathValidator = new PathValidator();
 
     /**
      * Creates a command based on the input string.
      *
      * @param input the command input string
      * @return the created command
-     * @throws UnknownCommandException if the command is unknown
+     * @throws CommandException if the command is unknown
      */
-    public Command createCommand(String input) throws UnknownCommandException {
+    public Command createCommand(String input) throws CommandException {
         if (isNullOrBlank(input)) {
             return null;
         }
@@ -30,27 +32,27 @@ public class CommandFactory {
         switch (commandType) {
             case "CREATE":
                 if (parts.length < 2) {
-                    return null;
+                    throw new CommandException("CREATE command requires a path parameter");
                 }
-                return new CreateCommand(fileSystem, parts[1], input);
+                return new CreateCommand(pathValidator, fileSystem, parts[1], input);
 
             case "LIST":
                 return new ListCommand(fileSystem, input);
 
             case "MOVE":
                 if (parts.length < 3) {
-                    return null;
+                    throw new CommandException("MOVE command requires a source and a destination path parameters");
                 }
-                return new MoveCommand(fileSystem, parts[1], parts[2], input);
+                return new MoveCommand(pathValidator, fileSystem, parts[1], parts[2], input);
 
             case "DELETE":
                 if (parts.length < 2) {
-                    return null;
+                    throw new CommandException("DELETE command requires a path parameter");
                 }
-                return new DeleteCommand(fileSystem, parts[1], input);
+                return new DeleteCommand(pathValidator, fileSystem, parts[1], input);
 
             default:
-                throw new UnknownCommandException(commandType);
+                throw new CommandException("\"%s\" command is not supported".formatted(commandType));
         }
     }
 }

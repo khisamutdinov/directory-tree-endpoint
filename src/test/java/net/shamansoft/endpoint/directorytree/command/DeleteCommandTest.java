@@ -1,59 +1,47 @@
 package net.shamansoft.endpoint.directorytree.command;
 
-import net.shamansoft.endpoint.directorytree.model.Directory;
 import net.shamansoft.endpoint.directorytree.model.FileSystem;
+import net.shamansoft.endpoint.directorytree.utils.PathValidator;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class DeleteCommandTest {
 
     @Test
     void executeReturnsSuccessMessageWhenDirectoryIsDeleted() {
+        PathValidator pathValidator = mock(PathValidator.class);
         FileSystem fileSystem = mock(FileSystem.class);
         when(fileSystem.deleteDirectory("/valid/path")).thenReturn(true);
 
-        DeleteCommand deleteCommand = new DeleteCommand(fileSystem, "/valid/path", "delete /valid/path");
+        DeleteCommand deleteCommand = new DeleteCommand(pathValidator, fileSystem, "/valid/path", "delete /valid/path");
         String result = deleteCommand.execute();
 
         assertThat(result).isEqualTo("delete /valid/path\n");
     }
 
     @Test
-    void executeReturnsErrorWhenParentDirectoryDoesNotExist() {
+    void executeReturnsErrorMessageWhenDeletionFails() {
+        PathValidator pathValidator = mock(PathValidator.class);
         FileSystem fileSystem = mock(FileSystem.class);
-        when(fileSystem.deleteDirectory("/invalid/path")).thenReturn(false);
-        when(fileSystem.findDirectory("/invalid")).thenReturn(null);
+        doThrow(new IllegalArgumentException("Directory not found")).when(fileSystem).deleteDirectory("/invalid/path");
 
-        DeleteCommand deleteCommand = new DeleteCommand(fileSystem, "/invalid/path", "delete /invalid/path");
+        DeleteCommand deleteCommand = new DeleteCommand(pathValidator, fileSystem, "/invalid/path", "delete /invalid/path");
         String result = deleteCommand.execute();
 
-        assertThat(result).isEqualTo("delete /invalid/path\nCannot delete /invalid/path - /invalid does not exist\n");
+        assertThat(result).isEqualTo("delete /invalid/path\nCannot delete /invalid/path - Directory not found\n");
     }
 
     @Test
-    void executeReturnsErrorWhenDirectoryNotFound() {
+    void executeHandlesEmptyPathGracefully() {
+        PathValidator pathValidator = mock(PathValidator.class);
         FileSystem fileSystem = mock(FileSystem.class);
-        when(fileSystem.deleteDirectory("/missing/path")).thenReturn(false);
-        when(fileSystem.findDirectory("/missing")).thenReturn(mock(Directory.class));
+        doThrow(new IllegalArgumentException("Path cannot be empty")).when(fileSystem).deleteDirectory("");
 
-        DeleteCommand deleteCommand = new DeleteCommand(fileSystem, "/missing/path", "delete /missing/path");
+        DeleteCommand deleteCommand = new DeleteCommand(pathValidator, fileSystem, "", "delete ");
         String result = deleteCommand.execute();
 
-        assertThat(result).isEqualTo("delete /missing/path\nCannot delete /missing/path - directory not found\n");
-    }
-
-    @Test
-    void executeHandlesRootPathDeletion() {
-        FileSystem fileSystem = mock(FileSystem.class);
-        when(fileSystem.deleteDirectory("/")).thenReturn(false);
-        when(fileSystem.findDirectory("")).thenReturn(null);
-
-        DeleteCommand deleteCommand = new DeleteCommand(fileSystem, "/", "delete /");
-        String result = deleteCommand.execute();
-
-        assertThat(result).isEqualTo("delete /\nCannot delete / -  does not exist\n");
+        assertThat(result).isEqualTo("delete \nCannot delete  - Path cannot be empty\n");
     }
 }

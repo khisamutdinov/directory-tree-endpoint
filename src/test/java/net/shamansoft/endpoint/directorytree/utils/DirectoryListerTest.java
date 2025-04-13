@@ -5,10 +5,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class DirectoryListerTest {
 
@@ -25,64 +26,87 @@ class DirectoryListerTest {
 
     @Test
     void listDirectoryReturnsEmptyListForEmptyDirectory() {
-        when(rootDirectory.getChildrenNames()).thenReturn(Set.of());
+        when(rootDirectory.getName()).thenReturn("root");
         when(rootDirectory.hasChildren()).thenReturn(false);
 
         DirectoryLister directoryLister = new DirectoryLister();
-        List<String> result = directoryLister.listDirectory(rootDirectory, 0);
+        List<String> result = directoryLister.listDirectory(rootDirectory);
 
         assertThat(result).isEmpty();
     }
 
     @Test
-    void listDirectoryHandlesSingleLevelDirectory() {
-        when(rootDirectory.getChildrenNames()).thenReturn(Set.of("child1", "child2"));
-        when(rootDirectory.getChild("child1")).thenReturn(childDirectory1);
-        when(rootDirectory.getChild("child2")).thenReturn(childDirectory2);
-        when(childDirectory1.hasChildren()).thenReturn(false);
-        when(childDirectory2.hasChildren()).thenReturn(false);
+    void listDirectoryReturnsRootNameWhenDepthIsZero() {
+        when(rootDirectory.getName()).thenReturn("root");
+        when(rootDirectory.hasChildren()).thenReturn(false);
 
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertThat(result).containsExactlyInAnyOrder("child1", "child2");
+        assertThat(result).containsExactly("root");
     }
 
     @Test
-    void listDirectoryHandlesNestedDirectories() {
-        when(rootDirectory.getChildrenNames()).thenReturn(Set.of("child1"));
-        when(rootDirectory.getChild("child1")).thenReturn(childDirectory1);
-        when(childDirectory1.hasChildren()).thenReturn(true);
-        when(childDirectory1.getChildrenNames()).thenReturn(Set.of("child2"));
-        when(childDirectory1.getChild("child2")).thenReturn(childDirectory2);
-        when(childDirectory2.hasChildren()).thenReturn(false);
+    void listDirectoryHandlesDirectoryWithNoChildren() {
+        when(rootDirectory.getName()).thenReturn("root");
+        when(rootDirectory.getChildren()).thenReturn(Map.of());
 
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertThat(result).containsExactlyInAnyOrder("child1", "  child2");
+        assertThat(result).containsExactly("root");
+    }
+
+    @Test
+    void listDirectoryHandlesDirectoryWithMultipleChildren() {
+
+        Directory child3 = mock(Directory.class);
+        when(child3.getName()).thenReturn("child3");
+        when(child3.getChildren()).thenReturn(Map.of());
+
+        Directory child4 = mock(Directory.class);
+        when(child4.getName()).thenReturn("child4");
+        when(child4.getChildren()).thenReturn(Map.of());
+
+
+        when(rootDirectory.getName()).thenReturn("root");
+        when(rootDirectory.getChildren()).thenReturn(Map.of(
+                "child3", child3,
+                "child4", child4,
+                "child1", childDirectory1,
+                "child2", childDirectory2));
+        when(childDirectory1.getName()).thenReturn("child1");
+        when(childDirectory1.getChildren()).thenReturn(Map.of());
+        when(childDirectory2.getName()).thenReturn("child2");
+        when(childDirectory2.getChildren()).thenReturn(Map.of());
+
+        DirectoryLister directoryLister = new DirectoryLister();
+        List<String> result = directoryLister.listDirectory(rootDirectory, 0);
+
+        assertThat(result).containsExactly("root", "  child1", "  child2", "  child3", "  child4");
     }
 
     @Test
     void listDirectoryHandlesDeeplyNestedDirectories() {
-        when(rootDirectory.getChildrenNames()).thenReturn(Set.of("child1"));
-        when(rootDirectory.getChild("child1")).thenReturn(childDirectory1);
-        when(childDirectory1.hasChildren()).thenReturn(true);
-        when(childDirectory1.getChildrenNames()).thenReturn(Set.of("child2"));
-        when(childDirectory1.getChild("child2")).thenReturn(childDirectory2);
-        when(childDirectory2.hasChildren()).thenReturn(true);
-        when(childDirectory2.getChildrenNames()).thenReturn(Set.of("child3"));
-        Directory childDirectory3 = mock(Directory.class);
-        when(childDirectory2.getChild("child3")).thenReturn(childDirectory3);
-        when(childDirectory3.hasChildren()).thenReturn(false);
+        when(rootDirectory.getName()).thenReturn("root");
+        when(rootDirectory.getChildren()).thenReturn(Map.of("child1", childDirectory1));
+        when(childDirectory1.getName()).thenReturn("child1");
+        when(childDirectory1.getChildren()).thenReturn(Map.of("child2", childDirectory2));
+        when(childDirectory2.getName()).thenReturn("child2");
+        when(childDirectory2.getChildren()).thenReturn(Map.of());
 
         DirectoryLister directoryLister = new DirectoryLister();
         List<String> result = directoryLister.listDirectory(rootDirectory, 0);
 
-        assertThat(result).containsExactlyInAnyOrder(
-                "child1",
-                "  child2",
-                "    child3"
-        );
+        assertThat(result).containsExactly("root", "  child1", "    child2");
     }
+
+    @Test
+    void listDirectoryHandlesNullDirectoryGracefully() {
+        DirectoryLister directoryLister = new DirectoryLister();
+        List<String> result = directoryLister.listDirectory(null, 0);
+
+        assertThat(result).isEmpty();
+    }
+
 }

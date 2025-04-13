@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Represents a directory in the file system.
@@ -56,15 +55,6 @@ public class Directory {
      */
     public Directory getChild(String name) {
         return children.get(name);
-    }
-
-    /**
-     * Returns all children names.
-     *
-     * @return a set of all children names
-     */
-    public Set<String> getChildrenNames() {
-        return children.keySet();
     }
 
     /**

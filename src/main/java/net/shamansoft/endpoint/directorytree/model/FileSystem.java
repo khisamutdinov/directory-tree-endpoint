@@ -3,7 +3,6 @@ package net.shamansoft.endpoint.directorytree.model;
 import net.shamansoft.endpoint.directorytree.utils.DirectoryLister;
 import net.shamansoft.endpoint.directorytree.utils.StringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static net.shamansoft.endpoint.directorytree.utils.StringUtils.isNullOrBlank;
@@ -118,7 +117,7 @@ public class FileSystem {
     /**
      * Moves a directory from source path to destination path.
      *
-     * @param sourcePath the source path
+     * @param sourcePath      the source path
      * @param destinationPath the destination path
      * @return true if the move was successful, false otherwise
      */
@@ -166,13 +165,7 @@ public class FileSystem {
      * @return a list of strings representing the directory structure
      */
     public List<String> listDirectories() {
-        List<String> result = new ArrayList<>();
-        for (String dirName : root.getChildrenNames()) {
-            Directory dir = root.getChild(dirName);
-            result.add(dirName);
-            result.addAll(directoryLister.listDirectory(dir, 1));
-        }
-        return result;
+        return directoryLister.listDirectory(root);
     }
 
 }
